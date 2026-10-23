@@ -22,6 +22,25 @@ type Contact = {
 const TYPE_KEYS = Object.keys(TYPES) as TypeKey[]
 const CUR_KEYS = Object.keys(CURRENCIES) as CurrencyCode[]
 
+/** Formats what's typed into a money/number field with thousands separators as you go. */
+function withCommas(raw: string, allowDecimal: boolean): string {
+  let v = raw.replace(/,/g, '')
+  if (allowDecimal) {
+    v = v.replace(/[^0-9.]/g, '')
+    const dot = v.indexOf('.')
+    if (dot !== -1) v = v.slice(0, dot + 1) + v.slice(dot + 1).replace(/\./g, '')
+    const [intPart, decPart] = v.split('.')
+    const intFmt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return decPart !== undefined ? `${intFmt}.${decPart.slice(0, 2)}` : intFmt
+  }
+  v = v.replace(/[^0-9]/g, '')
+  return v.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+const onAmountInput =
+  (allowDecimal: boolean) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.currentTarget.value = withCommas(e.currentTarget.value, allowDecimal)
+  }
+
 export default function LeakcheckTool() {
   const [currency, setCurrency] = useState<CurrencyCode>('GBP')
   const [type, setType] = useState<TypeKey | null>(null)
@@ -619,7 +638,7 @@ export default function LeakcheckTool() {
                     <label htmlFor="in-inquiries">How many new inquiries do you get in a typical month?</label>
                     <span className="hint">Count messages, DMs and calls from people who haven&apos;t bought from you before.</span>
                     <div className="field">
-                      <input id="in-inquiries" name="inquiries" inputMode="numeric" autoComplete="off" placeholder="e.g. 60" />
+                      <input id="in-inquiries" name="inquiries" inputMode="numeric" autoComplete="off" placeholder="e.g. 60" onChange={onAmountInput(false)} />
                     </div>
                     {qErrors.inquiries && <span className="err">{qErrors.inquiries}</span>}
                   </div>
@@ -982,8 +1001,8 @@ export default function LeakcheckTool() {
                         </div>
                         <h3>{LEAKS[result.list[0].key].name}</h3>
                         <p>
-                          Worth about <b>{money(result.list[0].amount)}</b> a month. It&apos;s your
-                          biggest leak, so it&apos;s the first one to plug.
+                          Worth about <b>{money(result.list[0].amount)}</b>{' '}
+                          a month. It&apos;s your biggest leak, so it&apos;s the first one to plug.
                         </p>
                         <Research leakKey={result.list[0].key} />
                         <ActionList leakKey={result.list[0].key} />
@@ -1172,14 +1191,11 @@ export default function LeakcheckTool() {
                   WhatsApp
                 </a>
                 <a href={`mailto:${CONTACT.email}`}>Email</a>
-                <a href="https://usedappa.com" target="_blank" rel="noopener noreferrer">
-                  usedappa.com
-                </a>
               </div>
             </div>
           </div>
           <div className="foot-bottom">
-            <span>© {new Date().getFullYear()} Dappa. A free tool from usedappa.com.</span>
+            <span>© {new Date().getFullYear()} Dappa. A free tool for WhatsApp businesses.</span>
             <span>Figures are estimates from your answers, not financial advice.</span>
           </div>
         </footer>
