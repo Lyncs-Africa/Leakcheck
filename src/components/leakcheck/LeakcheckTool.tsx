@@ -42,7 +42,7 @@ const onAmountInput =
   }
 
 export default function LeakcheckTool() {
-  const [currency, setCurrency] = useState<CurrencyCode>('GBP')
+  const [currency, setCurrency] = useState<CurrencyCode>('NGN')
   const [type, setType] = useState<TypeKey | null>(null)
   const [screen, setScreen] = useState<Screen>('intro')
   const [convertVal, setConvertVal] = useState(3)
@@ -353,7 +353,7 @@ export default function LeakcheckTool() {
             <span>{L.month}</span>
           </li>
           <li>
-            <span className="when">An audit checks</span>
+            <span className="when">An audit check</span>
             <span>{L.audit}</span>
           </li>
         </ul>
@@ -439,23 +439,29 @@ export default function LeakcheckTool() {
             <small>by Dappa</small>
           </a>
           <div className="controls">
-            <div className="seg" role="radiogroup" aria-label="Currency">
-              {CUR_KEYS.map((code) => (
-                <React.Fragment key={code}>
-                  <input
-                    type="radio"
-                    name="cur"
-                    id={`cur-${code}`}
-                    value={code}
-                    checked={currency === code}
-                    onChange={() => setCurrency(code)}
-                  />
-                  <label htmlFor={`cur-${code}`}>
-                    {CURRENCIES[code].symbol} {code}
-                  </label>
-                </React.Fragment>
-              ))}
-            </div>
+            {screen === 'intro' ? (
+              <div className="seg" role="radiogroup" aria-label="Currency">
+                {CUR_KEYS.map((code) => (
+                  <React.Fragment key={code}>
+                    <input
+                      type="radio"
+                      name="cur"
+                      id={`cur-${code}`}
+                      value={code}
+                      checked={currency === code}
+                      onChange={() => setCurrency(code)}
+                    />
+                    <label htmlFor={`cur-${code}`}>
+                      {CURRENCIES[code].symbol} {code}
+                    </label>
+                  </React.Fragment>
+                ))}
+              </div>
+            ) : (
+              <span className="cur-badge" aria-label={`Currency: ${currency}`}>
+                {CURRENCIES[currency].symbol} {currency}
+              </span>
+            )}
             <button
               type="button"
               className="theme-toggle"
@@ -505,9 +511,9 @@ export default function LeakcheckTool() {
                 <span className="pill on-dark">Free revenue leak calculator from Dappa</span>
                 <h1 id="intro-title">Find the money slipping through your chats.</h1>
                 <p className="lead">
-                  Busy chats hide quiet losses. A DM nobody answered. A quote nobody chased. A regular
-                  who never came back. Answer a few questions and Leakcheck shows what that costs you
-                  each month, and what to fix first.
+                  Busy chats hide quiet losses. A DM you forgot to answer. A quote you did not chase.
+                  A regular who never came back. Answer a few questions and Leakcheck shows what that
+                  costs you each month, and what to fix first.
                 </p>
                 <div className="row">
                   <a
@@ -532,7 +538,7 @@ export default function LeakcheckTool() {
 
             <div className="block" id="pick" style={{ paddingTop: 0, scrollMarginTop: 16 }}>
               <div className="split">
-                <h2>Built for businesses that sell in the chat.</h2>
+                <h2>Built for businesses that sell in the DMs.</h2>
                 <div className="side">
                   <p className="lead">
                     Caterers, braiders, tailors, planners, cleaners and cargo services. If customers
@@ -632,6 +638,35 @@ export default function LeakcheckTool() {
               <div className="panel">
                 <fieldset>
                   <legend>
+                    <span className="pill">Currency</span>
+                  </legend>
+                  <div className="q">
+                    <span className="q-label">Choose your currency</span>
+                    <span className="hint">Your report and every figure use this currency.</span>
+                    <div className="seg" role="radiogroup" aria-label="Currency">
+                      {CUR_KEYS.map((code) => (
+                        <React.Fragment key={code}>
+                          <input
+                            type="radio"
+                            name="cur-form"
+                            id={`curf-${code}`}
+                            value={code}
+                            checked={currency === code}
+                            onChange={() => setCurrency(code)}
+                          />
+                          <label htmlFor={`curf-${code}`}>
+                            {CURRENCIES[code].symbol} {code}
+                          </label>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+
+              <div className="panel">
+                <fieldset>
+                  <legend>
                     <span className="pill">New inquiries</span>
                   </legend>
                   <div className="q">
@@ -655,6 +690,7 @@ export default function LeakcheckTool() {
                         inputMode="decimal"
                         autoComplete="off"
                         placeholder={`e.g. ${T.example[currency].toLocaleString()}`}
+                        onChange={onAmountInput(true)}
                       />
                     </div>
                     {qErrors.value && <span className="err">{qErrors.value}</span>}
@@ -730,7 +766,7 @@ export default function LeakcheckTool() {
                     <label htmlFor="in-quiet">How many quotes or price lists do you send in a month that never get a yes?</label>
                     <span className="hint">The people who asked, got a price, then went quiet.</span>
                     <div className="field">
-                      <input id="in-quiet" name="quiet" inputMode="numeric" autoComplete="off" placeholder="e.g. 15" />
+                      <input id="in-quiet" name="quiet" inputMode="numeric" autoComplete="off" placeholder="e.g. 15" onChange={onAmountInput(false)} />
                     </div>
                     {qErrors.quiet && <span className="err">{qErrors.quiet}</span>}
                   </div>
@@ -761,7 +797,7 @@ export default function LeakcheckTool() {
                   <div className="q">
                     <label htmlFor="in-noshows">How many no-shows or last-minute cancellations in a typical month?</label>
                     <div className="field">
-                      <input id="in-noshows" name="noshows" inputMode="numeric" autoComplete="off" placeholder="e.g. 5" />
+                      <input id="in-noshows" name="noshows" inputMode="numeric" autoComplete="off" placeholder="e.g. 5" onChange={onAmountInput(false)} />
                     </div>
                     {qErrors.noshows && <span className="err">{qErrors.noshows}</span>}
                   </div>
@@ -802,6 +838,7 @@ export default function LeakcheckTool() {
                         inputMode="decimal"
                         autoComplete="off"
                         placeholder={`e.g. ${Math.round(T.example[currency] * 1.2).toLocaleString()}`}
+                        onChange={onAmountInput(true)}
                       />
                     </div>
                     {qErrors.unpaid && <span className="err">{qErrors.unpaid}</span>}
